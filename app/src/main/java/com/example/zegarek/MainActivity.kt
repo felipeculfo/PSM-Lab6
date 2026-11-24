@@ -22,11 +22,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
@@ -83,8 +86,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var selectedZones by rememberSaveable {
-        mutableStateOf(listOf("Europe/Warsaw", "America/New_York", "Asia/Tokyo"))
+    val availableZones: List<String> = stringArrayResource(R.array.available_zones).toList()
+    val zoneToIanaMap = remember(context, availableZones) { loadZoneToIanaMap(context) }
+    var selectedZones by rememberSaveable(availableZones) {
+        mutableStateOf(availableZones.take(3))
     }
 
     Column(
@@ -94,26 +99,39 @@ fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Strefy czasowe",
+            text = stringResource(R.string.title_time_zones),
             style = MaterialTheme.typography.headlineSmall
         )
 
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(AVAILABLE_ZONES, key = { it }) { zoneId ->
+            items(availableZones, key = { it }) { zoneLabel ->
+                val cityName = rememberCityName(zoneLabel)
+                val ianaZone = zoneToIanaMap[zoneLabel.trim()] ?: zoneLabel
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = zoneId in selectedZones,
+                        checked = zoneLabel in selectedZones,
                         onCheckedChange = {
-                            selectedZones = toggleZoneSelection(selectedZones, zoneId)
+                            selectedZones = toggleZoneSelection(selectedZones, zoneLabel)
                         }
                     )
-                    Text(text = zoneId)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = cityName,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = zoneLabel,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
@@ -127,7 +145,7 @@ fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Pokaż czas")
+            Text(stringResource(R.string.action_show_time))
         }
     }
 }

@@ -1,3 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">zegarek</string>
+    <string name="app_name">Clock</string>
+    <string name="title_time_zones">Time zones</string>
+    <string name="action_show_time">Show time</string>
+    <string name="no_zones_selected">No zones selected.</string>
+
+    <string name="city_europe_warsaw">Warsaw</string>
+    <string name="city_america_new_york">New York</string>
+    <string name="city_asia_tokyo">Tokyo</string>
+    <string name="city_australia_sydney">Sydney</string>
+    <string name="city_america_sao_paulo">Sao Paulo</string>
+    <string name="city_africa_cairo">Cairo</string>
+
+    <string-array name="available_zones">
+        <item>Europe: Warsaw</item>
+        <item>NA: New York</item>
+        <item>Asia: Tokyo</item>
+        <item>Australia: Sydney</item>
+        <item>SA: Sao Paulo</item>
+        <item>Africa: Cairo</item>
+    </string-array>
+
+    <string-array name="available_zone_iana_ids">
+        <item>Europe/Warsaw</item>
+        <item>America/New_York</item>
+        <item>Asia/Tokyo</item>
+        <item>Australia/Sydney</item>
+        <item>America/Sao_Paulo</item>
+        <item>Africa/Cairo</item>
+    </string-array>
 </resources>
