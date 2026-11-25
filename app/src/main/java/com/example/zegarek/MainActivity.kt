@@ -1,7 +1,6 @@
 // MainActivity.kt
 package com.example.zegarek
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -22,15 +21,26 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+//import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+//import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import kotlinx.serialization.Serializable
+
+@Serializable
+data object ZoneSelectionKey : NavKey
+
+@Serializable
+data class ClocksKey(val zones: List<String>) : NavKey
 
 class MainActivity : ComponentActivity() {
 
@@ -40,9 +50,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ZoneSelectionScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    AppNavigation(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -84,10 +92,13 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+fun ZoneSelectionScreen(
+    onShowTime: (List<String>) -> Unit,
+    modifier: Modifier = Modifier
+) {
+//    val context = LocalContext.current
     val availableZones: List<String> = stringArrayResource(R.array.available_zones).toList()
-    val zoneToIanaMap = remember(context, availableZones) { loadZoneToIanaMap(context) }
+//    val zoneToIanaMap = remember(context, availableZones) { loadZoneToIanaMap(context) }
     var selectedZones by rememberSaveable(availableZones) {
         mutableStateOf(availableZones.take(3))
     }
@@ -111,7 +122,7 @@ fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
         ) {
             items(availableZones, key = { it }) { zoneLabel ->
                 val cityName = rememberCityName(zoneLabel)
-                val ianaZone = zoneToIanaMap[zoneLabel.trim()] ?: zoneLabel
+//                val ianaZone = zoneToIanaMap[zoneLabel.trim()] ?: zoneLabel
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -137,15 +148,34 @@ fun ZoneSelectionScreen(modifier: Modifier = Modifier) {
         }
 
         Button(
-            onClick = {
-                val intent = Intent(context, TimeActivity::class.java).apply {
-                    putExtra(EXTRA_SELECTED_ZONES, selectedZones.toTypedArray())
-                }
-                context.startActivity(intent)
-            },
+            onClick = { onShowTime(selectedZones) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.action_show_time))
         }
     }
+}
+
+@Composable
+fun AppNavigation(modifier: Modifier = Modifier) {
+    val backStack = rememberNavBackStack(ZoneSelectionKey)
+
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryProvider = entryProvider {
+            entry<ZoneSelectionKey> {
+                ZoneSelectionScreen(
+                    onShowTime = { zones -> backStack.add(ClocksKey(zones)) },
+                    modifier = modifier
+                )
+            }
+            entry<ClocksKey> { key ->
+                TimeClocksScreen(
+                    selectedZoneIds = key.zones,
+                    modifier = modifier
+                )
+            }
+        }
+    )
 }
